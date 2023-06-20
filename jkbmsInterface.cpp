@@ -26,7 +26,7 @@
 #include <esp_event.h>
 
 
-#include <JKBMS.h>
+#include <jkbmsInterface.h>
  
 
  // set this to be the same as the application
