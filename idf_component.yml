@@ -1,0 +1,7 @@
+
+jkbmsInterface:
+  version: test
+  path: jkbmsInterface
+  git: ssh://[email protected]/user/components.git
+  esp-idf:
+    version: ">=4.3"
