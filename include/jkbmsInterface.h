@@ -45,12 +45,15 @@
 
 
 
+
 class JKBMS {
 public:
 //bool hasJKData();
 void start();
 void Request_JK_Battery_485_Status_Frame();
 
+bool printOutPut;
+int taskDelay;
 float power_tube_temperature_sensor_ ;
  float temperature_sensor_1_sensor_ ;
   float temperature_sensor_2_sensor_ ;
