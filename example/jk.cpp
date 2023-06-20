@@ -3,6 +3,12 @@
 // two of the esp home examples and one from STM32. You will have to google
 // esphome JKBMS as I dont recall the source of the other examples.
 
+// update your make file for cpp if you havent already
+// idf_component_register(SRCS "jk.cpp"
+//                     INCLUDE_DIRS "."
+//                     PRIV_REQUIRES  jkbmsInterface
+//                     )
+
 
 #include <stdio.h>
 #include <string.h>
