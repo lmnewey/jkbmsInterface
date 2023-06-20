@@ -83,7 +83,7 @@
 //   float protocol_version_sensor_ ;
 
 // Include the JKBMS library
-#include <JKBMS.h>
+#include <jkbmsInterface.h>
 	
 // create an object of the JKBMS class
 JKBMS jkbms ;
