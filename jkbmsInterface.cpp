@@ -43,6 +43,9 @@ QueueHandle_t uart_queue;
 const int buffsize = 400;
 
 
+// adding bool to switch off output, and a value to change polling period
+bool printOutPut = true;
+int taskDelay = 250;
 
 // #define rx_bufferSIZE 1024
 
@@ -343,7 +346,9 @@ void JKBMS::Request_JK_Battery_485_Status_Frame(){
   frame[19] = crc >> 8;//0x01;//crc >> 8;
   frame[20] = crc >> 0;//0x29;//crc >> 0;
   uart_write_bytes(portNum, frame, 21);
+  if(printOutPut){
  printf("Request Sent via port: %i\n", portNum);
+  }
 }
 
 void on_status_data_(const std::vector<uint8_t> &data) {
@@ -388,8 +393,10 @@ void on_jk_modbus_data(const std::vector<uint8_t> data)
       max_voltage_cell = i + 1;
     }
      //cellsv[i] = cell_voltage;
+     if(printOutPut){
      printf("Cell %i, ", i);
      printf("V:%.6f \n",  cell_voltage);
+     }
   }
   offset = data[1] + 3;
   average_cell_voltage = average_cell_voltage / cells;
@@ -397,14 +404,19 @@ void on_jk_modbus_data(const std::vector<uint8_t> data)
   temperature_sensor_1_sensor_ = get_temperature(jk_get_16bit(offset + 3 * 1));
   temperature_sensor_2_sensor_ =  get_temperature(jk_get_16bit(offset + 3 * 2));
   total_voltage = jk_get_16bit(offset + 3 * 3) * 0.01f;
-  //printf("Pack Voltage: %.3f \n", total_voltage);
+  
    current_sensor_ = get_current(jk_get_16bit(offset + 3 * 4), 0x01) * 0.01f;
    current = get_current(jk_get_16bit(offset + 3 * 4), data[offset + 84 + 3 * 45]) * 0.01f;
     power = total_voltage * current;
-  //printf("Current Power: %.2f \n", power);
+  
   raw_battery_remaining_capacity = data[offset + 3 * 5];
   capacity_remaining_sensor_ = (float) raw_battery_remaining_capacity;
-  //printf("AH Remaining: %i \n", raw_battery_remaining_capacity);
+  
+  // if(printOutPut){
+  // printf("Pack Voltage: %.3f \n", total_voltage);
+  // printf("AH Remaining: %i \n", raw_battery_remaining_capacity);
+  // printf("Current Power: %.2f \n", power);
+  // }
   temperature_sensors_sensor_ = (float) data[offset + 2 + 3 * 5];
   charging_cycles_sensor_ = jk_get_16bit(offset + 4 + 3 * 5);
   total_charging_cycle_capacity_sensor_ = jk_get_32bit(offset + 4 + 3 * 6);
@@ -470,6 +482,12 @@ actual_battery_capacity_sensor_ = (float) jk_get_32bit(offset + 54 + 3 * 45);
 
  protocol_version_sensor_ = (float) data[offset + 84 + 3 * 45];
 
+  if(printOutPut){
+  printf("Pack Voltage: %.3f \n", total_voltage);
+  printf("AH Remaining: %i \n", raw_battery_remaining_capacity);
+  printf("derived cap reamining: %.2f \n", capacity_remaining_derived_sensor_);
+  printf("Current Power: %.2f \n", power);
+  }
 }
 
 bool parse_jk_modbus_byte_(int size, int iter) {
@@ -549,8 +567,10 @@ bool JKBMS::parse_jk_modbus_byte_(int size, int iter) {
 void proceses_jk_modbus_Buffer()
 {
 	int rsize = rx_buffer.size();
+     
+if(printOutPut){
   printf("Buffer size at receive time:%i \n", rsize );
-  
+}
 	for(int i = 0; i< rsize; i++)
 			if(i <= rsize-1){
 			if( rx_buffer[i] != 0x4E || rx_buffer[i+1] != 0x57) {	
@@ -602,16 +622,18 @@ void JKBMS::start(){
     uart_param_config(portNum, &uartConfig);
     uart_set_pin(portNum, TX_PIN, RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     // Create a task to handle UART events
+    if(printOutPut){
     printf("Create Serial Task\n");
+    }
     xTaskCreate(uartRxHandler, "uart_rx_handler", 4096, NULL, 10, NULL);
 
 
-vTaskDelay(pdMS_TO_TICKS(250));
+vTaskDelay(pdMS_TO_TICKS(taskDelay));
 
 
  while(1){    
   Request_JK_Battery_485_Status_Frame();
-  vTaskDelay(pdMS_TO_TICKS(250)); 
+  vTaskDelay(pdMS_TO_TICKS(taskDelay)); 
    if(rx_buffer.size() > 50)
    	{    
 		proceses_jk_modbus_Buffer();		
